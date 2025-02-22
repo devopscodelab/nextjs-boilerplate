@@ -42,9 +42,19 @@ jobs:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         IMAGE_TAG: ${{ github.sha }}
       run: |
+        # Build the Docker image
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        
+        # Also tag the image as "latest" so ECS can pull it
+        docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+        
+        # Push both the versioned and latest tags to Amazon ECR
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+        
+        # Save image references
         echo "IMAGE_URI=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_ENV
+        echo "IMAGE_URI_LATEST=$ECR_REGISTRY/$ECR_REPOSITORY:latest" >> $GITHUB_ENV
 
     - name: Register New Task Definition
       id: register-task
@@ -53,15 +63,17 @@ jobs:
           --family $TASK_DEFINITION_FAMILY \
           --execution-role-arn arn:aws:iam::534249315747:role/pflegia-ecs-execution-role \
           --network-mode awsvpc \
+          --requires-compatibilities FARGATE \
+          --cpu 256 \
+          --memory 512 \
           --container-definitions "[{
             \"name\": \"${CONTAINER_NAME}\",
-            \"image\": \"${IMAGE_URI}\",
+            \"image\": \"${IMAGE_URI_LATEST}\",
             \"cpu\": 256,
             \"memory\": 512,
             \"essential\": true,
             \"portMappings\": [{
               \"containerPort\": 3000,
-              \"hostPort\": 3000,
               \"protocol\": \"tcp\"
             }]
           }]" \
