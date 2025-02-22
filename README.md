@@ -99,3 +99,19 @@ Configure the following environment variables in AWS ECS task definition:
 - [Next.js Documentation](https://nextjs.org/docs)
 - [AWS ECS Documentation](https://aws.amazon.com/ecs/)
 - [GitHub Actions Documentation](https://docs.github.com/en/actions)
+
+## Next Steps
+1. Remove Vercel GitHub Integration
+Since Vercel is managing your deployment through GitHub Apps, do the following:
+
+Step 1: Remove GitHub Integration from Vercel
+Go to Vercel Dashboard.
+Select your project.
+Go to Settings > Git.
+Under "Git Integration," click "Remove GitHub App".
+Step 2: Remove Vercel App from GitHub
+Go to GitHub → Open your repository.
+Navigate to Settings > Integrations > GitHub Apps.
+Find Vercel in the list.
+Click Configure → Click Uninstall.
+Now, GitHub will no longer trigger Vercel deployments.
