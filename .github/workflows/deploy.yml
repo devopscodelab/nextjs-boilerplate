@@ -1,4 +1,3 @@
-
 # Workflow name that appears in GitHub Actions UI
 name: Deploy to Amazon ECS
 
