@@ -23,7 +23,7 @@ permissions:
 jobs:
   deploy:
     name: Deploy
-    runs-on: ubuntu-latest              # Use latest Ubuntu runner
+    runs-on: self-hosted              # Use latest Ubuntu runner
     environment: production             # Environment name for deployment
 
     steps:
