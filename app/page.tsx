@@ -1,101 +1,127 @@
-import Image from "next/image";
+
+import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <div className="min-h-screen bg-gradient-to-b from-background to-gray-50 dark:from-background dark:to-gray-900">
+      <main className="container mx-auto px-6 py-16">
+        <div className="text-center mb-16">
+          <h1 className="text-4xl font-bold mb-4">Cloud Engineering Assessment</h1>
+          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+            Comprehensive AWS Migration & CI/CD Pipeline Implementation
+          </p>
+        </div>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+        <section className="mb-16 max-w-4xl mx-auto">
+          <div className="prose dark:prose-invert max-w-none">
+            <p className="text-lg mb-6">
+              This technical assessment demonstrates the design and implementation of a modern cloud infrastructure migration strategy. 
+              The project focuses on transitioning a distributed application stack from legacy hosting to a fully automated AWS cloud environment, 
+              implementing industry best practices and DevOps methodologies.
+            </p>
+            
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm mb-8">
+              <h2 className="text-2xl font-bold mb-4">Project Overview</h2>
+              <p className="mb-4">
+                The migration encompasses a complete infrastructure overhaul, including the implementation of automated CI/CD pipelines, 
+                containerized applications, and serverless architectures. Key focus areas include high availability, scalability, 
+                security, and operational efficiency.
+              </p>
+              <ul className="list-disc pl-6 space-y-2">
+                <li>Infrastructure as Code using Terraform for automated resource provisioning</li>
+                <li>Containerization strategy with AWS ECS and ECR</li>
+                <li>Blue-green deployment implementation for zero-downtime updates</li>
+                <li>Comprehensive monitoring and logging solutions</li>
+              </ul>
+            </div>
+
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-lg mb-8">
+              <h2 className="text-2xl font-bold mb-4">Technical Highlights</h2>
+              <ul className="space-y-3">
+                <li className="flex items-start">
+                  <span className="font-semibold mr-2">•</span>
+                  <span>Multi-region deployment architecture for improved latency and redundancy</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="font-semibold mr-2">•</span>
+                  <span>Automated security scanning and compliance checks in CI/CD pipeline</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="font-semibold mr-2">•</span>
+                  <span>Cost optimization through resource right-sizing and auto-scaling policies</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="font-semibold mr-2">•</span>
+                  <span>Integrated secrets management and role-based access control</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+          <Card
+            title="Current Infrastructure"
+            description="Detailed analysis of existing setup and identified optimization opportunities"
+            link="/infrastructure"
+          />
+          <Card
+            title="Proposed Architecture"
+            description="Comprehensive CI/CD pipeline design with AWS best practices"
+            link="/architecture"
+          />
+          <Card
+            title="Migration Strategy"
+            description="Phased implementation plan with risk mitigation strategies"
+            link="/strategy"
+          />
+        </div>
+
+        <section className="mt-16 mb-16 text-center">
+          <h2 className="text-2xl font-bold mb-4">Contact Information</h2>
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm max-w-md mx-auto">
+            <p className="text-gray-600 dark:text-gray-300 mb-4">
+              For inquiries about this cloud engineering assessment, please reach out at:
+            </p>
+            <a href="mailto:oguzhanilkanboran@gmail.com" className="text-blue-500 hover:text-blue-600 font-semibold">
+              emailme
+            </a>
+          </div>
+        </section>
+
+        <div className="mt-16 text-center">
+          <h2 className="text-2xl font-bold mb-8">Core Technologies & Services</h2>
+          <div className="flex flex-wrap justify-center gap-4">
+            {[
+              "AWS ECS",
+              "GitHub Actions",
+              "Terraform",
+              "Lambda",
+              "CloudWatch",
+              "Route53",
+              "ELB",
+              "RDS",
+              "CloudFront",
+              "S3"
+            ].map((tech) => (
+              <span key={tech} className="px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-full">
+                {tech}
+              </span>
+            ))}
+          </div>
         </div>
       </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
     </div>
+  );
+}
+
+function Card({ title, description, link }: { title: string; description: string; link: string }) {
+  return (
+    <Link href={link} className="block group">
+      <div className="p-6 rounded-lg border border-gray-200 dark:border-gray-800 hover:border-blue-500 dark:hover:border-blue-500 transition-colors">
+        <h3 className="text-xl font-semibold mb-2 group-hover:text-blue-500">{title}</h3>
+        <p className="text-gray-600 dark:text-gray-400">{description}</p>
+      </div>
+    </Link>
   );
 }
