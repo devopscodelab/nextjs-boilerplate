@@ -12,8 +12,8 @@ env:
   TASK_DEFINITION_FAMILY: pflegia-task
   CONTAINER_NAME: pflegia-container
   ALB_LISTENER_ARN: arn:aws:elasticloadbalancing:us-east-1:534249315747:listener/app/pflegia-alb/32ac1abd20d12092/c816a24d292e4d8a
-  TG_BLUE: arn:aws:elasticloadbalancing:us-east-1:534249315747:targetgroup/pflegia-blue-tg/91fb9b8dac410f0f
-  TG_GREEN: arn:aws:elasticloadbalancing:us-east-1:534249315747:targetgroup/pflegia-green-tg/1db2ae719f26b393
+  TG_BLUE: arn:aws:elasticloadbalancing:us-east-1:534249315747:targetgroup/pflegia-blue-tg/cf5abdf320fc857c
+  TG_GREEN: arn:aws:elasticloadbalancing:us-east-1:534249315747:targetgroup/pflegia-green-tg/625520c39bfde7f8
 
 
 permissions:
