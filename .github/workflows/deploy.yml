@@ -1,4 +1,4 @@
-name: Deploy to Amazon ECS
+name: Deploy to Amazon ECS (Blue/Green)
 
 on:
   push:
@@ -11,6 +11,9 @@ env:
   ECS_SERVICE: pflegia-service
   TASK_DEFINITION_FAMILY: pflegia-task
   CONTAINER_NAME: pflegia-container
+  ALB_LISTENER_ARN: arn:aws:elasticloadbalancing:us-east-1:534249315747:listener/app/pflegia-alb/8f45df44738213f3/d09222b84997caf6
+  TG_BLUE: arn:aws:elasticloadbalancing:us-east-1:534249315747:targetgroup/pflegia-tg-blue/93197e69fda6c738
+  TG_GREEN: arn:aws:elasticloadbalancing:us-east-1:534249315747:targetgroup/pflegia-tg-green/91fb9b8dac410f0f
 
 permissions:
   contents: read
@@ -45,7 +48,7 @@ jobs:
         # Build the Docker image
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         
-        # Also tag the image as "latest" so ECS can pull it
+        # Tag the image as "latest" so ECS can pull it
         docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
         
         # Push both the versioned and latest tags to Amazon ECR
@@ -85,3 +88,29 @@ jobs:
     - name: Deploy Updated Task Definition to ECS
       run: |
         aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE --task-definition $TASK_REVISION --region $AWS_REGION
+
+    - name: Switch ALB Listener to New Target Group
+      run: |
+        # Get the currently active target group
+        ACTIVE_TG=$(aws ecs describe-services \
+          --cluster $ECS_CLUSTER \
+          --services $ECS_SERVICE \
+          --query "services[0].loadBalancers[0].targetGroupArn" \
+          --output text)
+
+        # Determine the next target group to use
+        if [[ "$ACTIVE_TG" == "$TG_BLUE" ]]; then
+          NEW_TG="$TG_GREEN"
+        else
+          NEW_TG="$TG_BLUE"
+        fi
+
+        echo "Switching traffic to: $NEW_TG"
+
+        # Update ALB listener rule to forward traffic to the new target group
+        aws elbv2 modify-listener \
+          --listener-arn $ALB_LISTENER_ARN \
+          --default-actions Type=forward,ForwardConfig='{"TargetGroups":[{"TargetGroupArn":"'"$NEW_TG"'","Weight":1}]}' \
+          --region $AWS_REGION
+
+        echo "Traffic switched successfully!"
