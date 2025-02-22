@@ -115,3 +115,9 @@ Navigate to Settings > Integrations > GitHub Apps.
 Find Vercel in the list.
 Click Configure → Click Uninstall.
 Now, GitHub will no longer trigger Vercel deployments.
+
+Step 3: Remove Vercel Deployment from GitHub
+Go to your GitHub repository.
+Open Settings > Environments.
+Look for an environment named "Production" or related to Vercel.
+Delete the environment.
