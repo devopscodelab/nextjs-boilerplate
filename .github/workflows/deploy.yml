@@ -95,7 +95,7 @@ jobs:
 
     - name: Deploy Updated Task Definition to ECS
       run: |
-        aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE --task-definition $TASK_REVISION --region $AWS_REGION
+        aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE --task-definition $TASK_REVISION --force-new-deployment --region $AWS_REGION
 
     - name: Switch ALB Listener to New Target Group
       run: |
