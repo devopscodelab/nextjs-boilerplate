@@ -1,85 +1,75 @@
-# Workflow name that appears in GitHub Actions UI
 name: Deploy to Amazon ECS
 
-# Trigger workflow on push to the main branch
 on:
   push:
     branches: [ "main" ]
 
-# Environment variables used throughout the workflow
 env:
-  AWS_REGION: us-east-1                  # AWS region where services are deployed
-  ECR_REPOSITORY: pflegia-app            # ECR repository name created by Terraform
-  ECS_SERVICE: pflegia-service           # ECS service name created by Terraform
-  ECS_CLUSTER: pflegia-cluster           # ECS cluster name created by Terraform
-  CONTAINER_NAME: pflegia-container      # Container name in task definition
-  TASK_DEFINITION: pflegia-task          # Task definition name created by Terraform
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: pflegia-app
+  ECS_CLUSTER: pflegia-cluster
+  ECS_SERVICE: pflegia-service
+  TASK_DEFINITION_FAMILY: pflegia-task
+  CONTAINER_NAME: pflegia-container
 
-# Required permissions for the GitHub Actions workflow
 permissions:
-  contents: read                         # Permission to read repository contents
+  contents: read
 
 jobs:
   deploy:
     name: Deploy to AWS ECS
-    runs-on: self-hosted                 # Use self-hosted runner (AWS EC2)
-    environment: production               # Deployment environment
+    runs-on: self-hosted
+    environment: production
 
     steps:
-    # Step 1: Check out the repository code
     - name: Checkout Repository
       uses: actions/checkout@v3
 
-    # Step 2: Set up AWS credentials for authentication
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}         # AWS access key stored in GitHub secrets
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }} # AWS secret key stored in GitHub secrets
-        aws-region: ${{ env.AWS_REGION }}                           # AWS region from env variables
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
 
-    # Step 3: Login to Amazon ECR
     - name: Login to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
 
-    # Step 4: Build, tag, and push Docker image to ECR
     - name: Build, Tag, and Push Docker Image to Amazon ECR
       id: build-image
       env:
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}    # ECR registry URL from login step
-        IMAGE_TAG: ${{ github.sha }}                            # Use commit SHA as image tag
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
       run: |
-        echo "Building Docker Image..."
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-        
-        echo "Pushing Docker Image to Amazon ECR..."
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        
-        echo "Saving image reference..."
         echo "IMAGE_URI=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_ENV
 
-    # Step 5: Download the current task definition
-    - name: Download ECS Task Definition
+    - name: Register New Task Definition
+      id: register-task
       run: |
-        echo "Fetching current ECS task definition..."
-        aws ecs describe-task-definition --task-definition ${{ env.TASK_DEFINITION }} \
-        --query taskDefinition > task-definition.json
+        NEW_TASK_DEF=$(aws ecs register-task-definition \
+          --family $TASK_DEFINITION_FAMILY \
+          --execution-role-arn arn:aws:iam::534249315747:role/pflegia-ecs-execution-role \
+          --network-mode awsvpc \
+          --container-definitions "[{
+            \"name\": \"${CONTAINER_NAME}\",
+            \"image\": \"${IMAGE_URI}\",
+            \"cpu\": 256,
+            \"memory\": 512,
+            \"essential\": true,
+            \"portMappings\": [{
+              \"containerPort\": 3000,
+              \"hostPort\": 3000,
+              \"protocol\": \"tcp\"
+            }]
+          }]" \
+          --region $AWS_REGION)
+        
+        TASK_REVISION=$(echo "$NEW_TASK_DEF" | jq -r '.taskDefinition.taskDefinitionArn')
+        echo "TASK_REVISION=$TASK_REVISION" >> $GITHUB_ENV
 
-    # Step 6: Update the ECS task definition with the new image
-    - name: Update ECS Task Definition with New Image
-      id: update-task
-      uses: aws-actions/amazon-ecs-render-task-definition@v1
-      with:
-        task-definition: task-definition.json                    # Task definition file
-        container-name: ${{ env.CONTAINER_NAME }}               # Container name to update
-        image: ${{ env.IMAGE_URI }}                            # New image URI
-
-    # Step 7: Deploy the updated task definition to ECS
-    - name: Deploy New Task Definition to Amazon ECS
-      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-      with:
-        task-definition: ${{ steps.update-task.outputs.task-definition }} # Updated task definition
-        cluster: ${{ env.ECS_CLUSTER }}                                   # ECS cluster name
-        service: ${{ env.ECS_SERVICE }}                                   # ECS service to update
-        wait-for-service-stability: true                                  # Wait for deployment to complete
+    - name: Deploy Updated Task Definition to ECS
+      run: |
+        aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE --task-definition $TASK_REVISION --region $AWS_REGION
