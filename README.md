@@ -1,36 +1,101 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
+# Next.js Application Deployment Guide
+
+This is a [Next.js](https://nextjs.org) project with Docker containerization and AWS ECS deployment.
+
+## Local Development
 
 First, run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Docker Setup
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Building the Docker Image
+
+```bash
+# Build the Docker image
+docker build -t nextjs-app .
+
+# Run the container locally
+docker run -p 3000:3000 nextjs-app
+```
+
+The application will be available at [http://localhost:3000](http://localhost:3000).
+
+## AWS ECS Deployment
+
+### Prerequisites
+
+1. AWS Account with appropriate permissions
+2. AWS CLI configured
+3. GitHub repository with the application code
+4. GitHub Actions configured
+
+### Infrastructure Setup (Using Terraform)
+
+1. ECS Cluster
+2. ECR Repository
+3. Task Definition
+4. ECS Service
+5. Load Balancer
+6. VPC and Security Groups
+
+### Deployment Process
+
+1. **GitHub Actions Setup**
+   - Add AWS credentials to GitHub secrets:
+     - AWS_ACCESS_KEY_ID
+     - AWS_SECRET_ACCESS_KEY
+
+2. **Automated Deployment Flow**
+   - Push to main branch triggers the workflow
+   - Docker image is built
+   - Image is pushed to ECR
+   - ECS task definition is updated
+   - New deployment is initiated
+
+### Monitoring Deployment
+
+1. Check GitHub Actions tab for deployment status
+2. Monitor ECS service in AWS Console
+3. View CloudWatch logs for container output
+
+## Project Structure
+
+```
+├── app/                  # Next.js application files
+├── .github/workflows/    # GitHub Actions workflow
+├── Dockerfile           # Docker configuration
+└── next.config.ts      # Next.js configuration
+```
+
+## Environment Variables
+
+Configure the following environment variables in AWS ECS task definition:
+
+- `NODE_ENV`: production
+- `PORT`: 3000
+- Add any other application-specific variables
+
+## Troubleshooting
+
+1. **Docker Build Issues**
+   - Check Dockerfile syntax
+   - Verify node_modules are properly handled
+   - Ensure all required files are included
+
+2. **Deployment Issues**
+   - Verify AWS credentials
+   - Check ECS service logs
+   - Monitor task definition updates
 
 ## Learn More
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [Next.js Documentation](https://nextjs.org/docs)
+- [AWS ECS Documentation](https://aws.amazon.com/ecs/)
+- [GitHub Actions Documentation](https://docs.github.com/en/actions)

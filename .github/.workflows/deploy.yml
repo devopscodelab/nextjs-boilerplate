@@ -1,0 +1,83 @@
+
+# Workflow name that appears in GitHub Actions UI
+name: Deploy to Amazon ECS
+
+# Trigger workflow on push to main branch
+on:
+  push:
+    branches: [ "main" ]
+
+# Environment variables used throughout the workflow
+env:
+  AWS_REGION: us-east-1                  # AWS region where services are deployed
+  ECR_REPOSITORY: nextjs-app             # ECR repository name created by Terraform
+  ECS_SERVICE: nextjs-service            # ECS service name created by Terraform
+  ECS_CLUSTER: nextjs-cluster            # ECS cluster name created by Terraform
+  CONTAINER_NAME: nextjs-container       # Container name in task definition
+  TASK_DEFINITION: nextjs-task-definition # Task definition name created by Terraform
+
+# Required permissions for the GitHub Actions workflow
+permissions:
+  contents: read                         # Permission to read repository contents
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest              # Use latest Ubuntu runner
+    environment: production             # Environment name for deployment
+
+    steps:
+    # Step 1: Check out the repository code
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    # Step 2: Set up AWS credentials for authentication
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}         # AWS access key stored in GitHub secrets
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }} # AWS secret key stored in GitHub secrets
+        aws-region: ${{ env.AWS_REGION }}                          # AWS region from env variables
+
+    # Step 3: Login to Amazon ECR
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    # Step 4: Build and push Docker image to ECR
+    - name: Build, tag, and push image to Amazon ECR
+      id: build-image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}    # ECR registry URL from login step
+        IMAGE_TAG: ${{ github.sha }}                            # Use commit SHA as image tag
+      run: |
+        # Build the Docker image
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        # Push the image to ECR
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        # Save the image URI for later use
+        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+    # Step 5: Download current task definition
+    - name: Download task definition
+      run: |
+        aws ecs describe-task-definition --task-definition ${{ env.TASK_DEFINITION }} \
+        --query taskDefinition > task-definition.json
+
+    # Step 6: Update task definition with new image
+    - name: Fill in the new image ID in the Amazon ECS task definition
+      id: task-def
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      with:
+        task-definition: task-definition.json                    # Task definition file
+        container-name: ${{ env.CONTAINER_NAME }}               # Container name to update
+        image: ${{ steps.build-image.outputs.image }}          # New image URI
+
+    # Step 7: Deploy updated task definition to ECS
+    - name: Deploy Amazon ECS task definition
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      with:
+        task-definition: ${{ steps.task-def.outputs.task-definition }} # Updated task definition
+        service: ${{ env.ECS_SERVICE }}                                # ECS service to update
+        cluster: ${{ env.ECS_CLUSTER }}                               # ECS cluster name
+        wait-for-service-stability: true                              # Wait for deployment to complete
