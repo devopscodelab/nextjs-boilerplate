@@ -121,3 +121,33 @@ Go to your GitHub repository.
 Open Settings > Environments.
 Look for an environment named "Production" or related to Vercel.
 Delete the environment.
+
+
+# Create a folder
+$ mkdir actions-runner && cd actions-runner
+# Download the latest runner package
+$ curl -o actions-runner-osx-x64-2.322.0.tar.gz -L https://github.com/actions/runner/releases/download/v2.322.0/actions-runner-osx-x64-2.322.0.tar.gz
+# Optional: Validate the hash
+$ echo "aa0fc262363912167dcdbc746ffcdf7b8996bc587f51cf1bab38ad86cf70b6ea  actions-runner-osx-x64-2.322.0.tar.gz" | shasum -a 256 -c
+# Extract the installer
+$ tar xzf ./actions-runner-osx-x64-2.322.0.tar.gz
+Configure
+# Create the runner and start the configuration experience
+$ ./config.sh --url https://github.com/devopscodelab/nextjs-boilerplate --token BD5L3I2LOQLK3K6PDSKCLLDHXGFLG
+# Last step, run it!
+$ ./run.sh
+Copied!
+Using your self-hosted runner
+# Use this YAML in your workflow file for each job
+runs-on: self-hosted
+
+# Since your GitHub Runner runs on AWS EC2, install Docker manually.
+
+For Ubuntu/Debian-based instances:
+
+sudo apt update
+sudo apt install -y docker.io
+sudo systemctl enable docker
+sudo systemctl start docker
+sudo usermod -aG docker $USER
+newgrp docker

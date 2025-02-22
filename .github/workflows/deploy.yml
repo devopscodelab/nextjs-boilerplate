@@ -9,11 +9,11 @@ on:
 # Environment variables used throughout the workflow
 env:
   AWS_REGION: us-east-1                  # AWS region where services are deployed
-  ECR_REPOSITORY: nextjs-app             # ECR repository name created by Terraform
-  ECS_SERVICE: nextjs-service            # ECS service name created by Terraform
-  ECS_CLUSTER: nextjs-cluster            # ECS cluster name created by Terraform
-  CONTAINER_NAME: nextjs-container       # Container name in task definition
-  TASK_DEFINITION: nextjs-task-definition # Task definition name created by Terraform
+  ECR_REPOSITORY: pflegia-app            # ECR repository name created by Terraform
+  ECS_SERVICE: pflegia-service            # ECS service name created by Terraform
+  ECS_CLUSTER: pflegia-cluster            # ECS cluster name created by Terraform
+  CONTAINER_NAME: pflegia-container       # Container name in task definition
+  TASK_DEFINITION: pflegia-task        # Task definition name created by Terraform
 
 # Required permissions for the GitHub Actions workflow
 permissions:
