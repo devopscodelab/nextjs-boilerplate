@@ -8,7 +8,7 @@ export default function Home() {
         <div className="text-center mb-16">
           <h1 className="text-4xl font-bold mb-4">Cloud Engineering Assessment</h1>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-            Comprehensive AWS Migration & CI/CD Pipeline Implementation
+            Comprehensive AWS Migration & CI/CD Pipeline Implementation 2025
           </p>
         </div>
 
