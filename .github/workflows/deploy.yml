@@ -1,4 +1,4 @@
-name: Deploy to Amazon ECS (Blue/Green)
+name: Deploy to Amazon ECS
 
 on:
   push:
@@ -11,10 +11,7 @@ env:
   ECS_SERVICE: pflegia-service
   TASK_DEFINITION_FAMILY: pflegia-task
   CONTAINER_NAME: pflegia-container
-  ALB_LISTENER_ARN: arn:aws:elasticloadbalancing:us-east-1:534249315747:listener/app/pflegia-alb/32ac1abd20d12092/c816a24d292e4d8a
-  TG_BLUE: arn:aws:elasticloadbalancing:us-east-1:534249315747:targetgroup/pflegia-blue-tg/cf5abdf320fc857c
-  TG_GREEN: arn:aws:elasticloadbalancing:us-east-1:534249315747:targetgroup/pflegia-green-tg/625520c39bfde7f8
-
+  ALB_TARGET_GROUP_ARN: arn:aws:elasticloadbalancing:us-east-1:534249315747:targetgroup/pflegia-tg/cf5abdf320fc857c
 
 permissions:
   contents: read
@@ -46,17 +43,10 @@ jobs:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         IMAGE_TAG: ${{ github.sha }}
       run: |
-        # Build the Docker image
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-
-        # Tag the image as "latest" so ECS can pull it
         docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
-
-        # Push both the versioned and latest tags to Amazon ECR
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
-
-        # Save image references
         echo "IMAGE_URI=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_ENV
         echo "IMAGE_URI_LATEST=$ECR_REGISTRY/$ECR_REPOSITORY:latest" >> $GITHUB_ENV
 
@@ -81,7 +71,7 @@ jobs:
               \"protocol\": \"tcp\"
             }],
             \"healthCheck\": {
-              \"command\": [\"CMD-SHELL\", \"curl -f http://localhost:3000/ || exit 1\"],
+              \"command\": [\"CMD-SHELL\", \"curl -f http://0.0.0.0:3000/ || exit 1\"],
               \"interval\": 60,
               \"timeout\": 30,
               \"retries\": 5,
@@ -95,30 +85,9 @@ jobs:
 
     - name: Deploy Updated Task Definition to ECS
       run: |
-        aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE --task-definition $TASK_REVISION --force-new-deployment --region $AWS_REGION
-
-    - name: Switch ALB Listener to New Target Group
-      run: |
-        # Get the currently active target group
-        ACTIVE_TG=$(aws ecs describe-services \
+        aws ecs update-service \
           --cluster $ECS_CLUSTER \
-          --services $ECS_SERVICE \
-          --query "services[0].loadBalancers[0].targetGroupArn" \
-          --output text)
-
-        # Determine the next target group to use
-        if [[ "$ACTIVE_TG" == "$TG_BLUE" ]]; then
-          NEW_TG="$TG_GREEN"
-        else
-          NEW_TG="$TG_BLUE"
-        fi
-
-        echo "Switching traffic to: $NEW_TG"
-
-        # Update ALB listener rule to forward traffic to the new target group
-        aws elbv2 modify-listener \
-          --listener-arn $ALB_LISTENER_ARN \
-          --default-actions '[{"Type":"forward","ForwardConfig":{"TargetGroups":[{"TargetGroupArn":"'"$NEW_TG"'","Weight":1}]}}]' \
+          --service $ECS_SERVICE \
+          --task-definition $TASK_REVISION \
+          --force-new-deployment \
           --region $AWS_REGION
-
-        echo "Traffic switched successfully!"
